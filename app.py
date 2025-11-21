@@ -3,6 +3,9 @@ import pandas as pd
 
 # 简单密码保护
 PASSWORD = "mfe2027"
+hide_elements = """
+
+st.markdown(hide_elements, unsafe_allow_html=True)
 
 def check_password():
     def password_entered():
