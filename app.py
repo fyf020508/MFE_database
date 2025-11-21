@@ -1,18 +1,6 @@
 import streamlit as st
 import pandas as pd
 
-# ===========================
-# 隐藏右上角 GitHub / 菜单
-# ===========================
-hide_elements = """
-<style>
-[data-testid="stToolbar"] {visibility: hidden !important;}
-#MainMenu {visibility: hidden !important;}
-footer {visibility: hidden !important;}
-header {visibility: hidden !important;}
-</style>
-"""
-st.markdown(hide_elements, unsafe_allow_html=True)
 
 # ===========================
 # 密码保护
