@@ -26,10 +26,14 @@ def check_password():
 if not check_password():
     st.stop()
 
+
+
 # ===========================
 # 1. Load Data
 # ===========================
 df = pd.read_csv("MFE_database.csv")
+
+
 
 # ===========================
 # emoji → Chinese nationality
@@ -53,10 +57,11 @@ def map_country(x):
 
 df["nationality_cn"] = df["nationality"].apply(map_country)
 
+
+
 # ===========================
 # 2. Summarize Function
 # ===========================
-
 def summarize(df, row_filter=None, cols=None, stats="mean"):
     
     # --- row filter ---
@@ -77,50 +82,68 @@ def summarize(df, row_filter=None, cols=None, stats="mean"):
     else:
         cols = [c for c in cols if c not in exclude_cols]
 
-    # --- aggregation ---
-    agg_dict = {}
-    for c in cols:
-        agg_dict[c] = stats
+    # --- aggregation dict ---
+    agg_dict = {c: stats for c in cols}
 
-    # ★ group by school (固定) — program 是加入的字段，不用于 groupby
+    # ★ group by school（固定）
     grouped = df.groupby("school").agg(agg_dict)
 
-    # ★ 新增：把 program 作为 reference 列
-    program_series = df.groupby("school")["program"].agg(lambda x: x.mode()[0] if len(x.mode()) else None)
+    # ★ program 列：每个 school 的众数（mode）
+    program_series = df.groupby("school")["program"].agg(
+        lambda x: x.mode()[0] if len(x.mode()) else None
+    )
 
-    # 合并
-    grouped.insert(1, "program", program_series)  # 放在第二列（紧挨 school）
+    # program 插在第二列
+    grouped.insert(1, "program", program_series)
 
-    # count
+    # count 列
     grouped["count"] = df.groupby("school").size()
 
     return grouped.reset_index()
 
+
+
 # ===========================
 # 3. Streamlit UI
 # ===========================
-
 st.title("🎓 Unipath Dashboard")
 
 st.sidebar.header("Filters")
 
-# 筛选：nationality
+# 国籍
 nat_choices = sorted(df["nationality_cn"].unique())
 nat_list = st.sidebar.multiselect("Nationality 🌍", nat_choices)
 
-# year
-year_list = st.sidebar.multiselect("Year 📅", sorted(df["year"].dropna().unique()))
+# 年份
+year_list = st.sidebar.multiselect(
+    "Year 📅",
+    sorted(df["year"].dropna().unique())
+)
 
-# result
-result_list = st.sidebar.multiselect("Result 🎯", sorted(df["result"].dropna().unique()))
+# 结果
+result_list = st.sidebar.multiselect(
+    "Result 🎯",
+    sorted(df["result"].dropna().unique())
+)
 
 # school
-school_list = st.sidebar.multiselect("School 🎓", sorted(df["school"].dropna().unique()))
+school_list = st.sidebar.multiselect(
+    "School 🎓",
+    sorted(df["school"].dropna().unique())
+)
 
-# program
-program_list = st.sidebar.multiselect("Program 📘", sorted(df["program"].dropna().unique()))
+# ★ Program options depend on selected school
+if school_list:
+    possible_programs = df[df["school"].isin(school_list)]["program"].dropna().unique()
+else:
+    possible_programs = df["program"].dropna().unique()
 
-# 数字列 + 国籍
+program_list = st.sidebar.multiselect(
+    "Program 📘",
+    sorted(possible_programs)
+)
+
+# 数字列
 cols_list = st.sidebar.multiselect(
     "Columns 📊",
     df.select_dtypes(include="number").columns.tolist() + ["nationality_cn"]
@@ -129,10 +152,11 @@ cols_list = st.sidebar.multiselect(
 # 统计方法
 stats = st.sidebar.radio("Statistics Method", ["mean", "median", "max", "min"])
 
+
+
 # ===========================
 # Run Button
 # ===========================
-
 if st.sidebar.button("Run"):
     row_filter = {}
 
