@@ -1,6 +1,28 @@
 import streamlit as st
 import pandas as pd
 
+# 简单密码保护
+PASSWORD = "mfe2027"
+
+def check_password():
+    def password_entered():
+        if st.session_state["password"] == PASSWORD:
+            st.session_state["authenticated"] = True
+
+    if "authenticated" not in st.session_state:
+        st.text_input(
+            "请输入访问密码：",
+            type="password",
+            on_change=password_entered,
+            key="password"
+        )
+        return False
+    return st.session_state["authenticated"]
+
+if not check_password():
+    st.stop()
+
+
 # ============================================
 # 1. Load Data
 # ============================================
